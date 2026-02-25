@@ -33,7 +33,7 @@ test.describe('WordPress API Tests', () => {
             pages.forEach((page: { id: number; link: string; slug: string }) => {
                 expect(page).toMatchObject({
                     id: expect.any(Number),
-                    link: expect.stringContaining('http://'),
+                    link: expect.stringContaining('htps://'),
                     slug: expect.any(String),
                 });
             });
