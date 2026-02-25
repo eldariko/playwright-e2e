@@ -86,9 +86,8 @@ jobs:
         if: env.REPORT_EXISTS == 'true' && failure()
         run: |
           echo "## 🤖 AI Root Cause Analysis" >> $GITHUB_STEP_SUMMARY
-          echo "Analyzing test failures using Ollama..." >> $GITHUB_STEP_SUMMARY
-          echo '```markdown' >> $GITHUB_STEP_SUMMARY
-          
+          echo "" >> $GITHUB_STEP_SUMMARY
+
           # Run the Python RCA container, point it to the local Ollama via host network
           docker run --rm \
             --network host \
@@ -96,10 +95,6 @@ jobs:
             smart-rca \
             -r /app/report.json \
             -m llama3.2 \
-            -u http://localhost:11434 >> rca_output.txt
-          
-          # Append the output to the GitHub Step Summary
-          cat rca_output.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+            -u http://localhost:11434 >> $GITHUB_STEP_SUMMARY
 
     # --- AI RCA Integration Steps End Here ---
