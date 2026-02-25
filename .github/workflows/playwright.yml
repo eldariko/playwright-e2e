@@ -77,6 +77,9 @@ jobs:
           
           # Pull the lightweight model inside the running container
           docker exec ollama ollama pull llama3.2
+          
+          # Fix file permissions so the runner can save the cache without Permission denied errors
+          sudo chown -R $USER:$USER ${{ github.workspace }}/.ollama
       # Explicitly SAVE the Ollama cache for future runs (only if it wasn't restored earlier)
       - name: Save Ollama Models Cache
         if: env.REPORT_EXISTS == 'true' && failure() && steps.cache-ollama-restore.outputs.cache-hit != 'true'
