@@ -1,9 +1,9 @@
 name: Playwright Tests
 on:
   push:
-    branches: [main, master]
+    branches: [ main, master ]
   pull_request:
-    branches: [main, master]
+    branches: [ main, master ]
 jobs:
   test:
     timeout-minutes: 60
@@ -42,3 +42,64 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+      # --- AI RCA Integration Steps Start Here ---
+
+      - name: Check for JSON test results
+        # Run this step only if the previous test step failed or passed (always run, but we only care if the JSON exists)
+        if: always()
+        id: check_results
+        run: |
+          if [ -f "test-results/playwright-results.json" ]; then
+            echo "REPORT_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "REPORT_EXISTS=false" >> $GITHUB_ENV
+          fi
+
+      # Cache the downloaded Ollama models to save time on future runs
+      - name: Cache Ollama Models
+        if: env.REPORT_EXISTS == 'true' && failure()
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.ollama
+          key: ollama-model-llama3.2-${{ runner.os }}
+
+      - name: Start Official Ollama Container & Pull Model
+        if: env.REPORT_EXISTS == 'true' && failure()
+        run: |
+          # Create the local directory for the cache mapping
+          mkdir -p ${{ github.workspace }}/.ollama
+          
+          # Start the official Ollama Docker image and mount the cache directory
+          docker run -d --name ollama -v ${{ github.workspace }}/.ollama:/root/.ollama -p 11434:11434 ollama/ollama
+          
+          # Wait a few seconds for the service to be ready
+          sleep 5
+          
+          # Pull the lightweight model inside the running container
+          docker exec ollama ollama pull llama3.2
+
+      - name: Build Docker Image for RCA
+        if: env.REPORT_EXISTS == 'true' && failure()
+        run: docker build -t smart-rca .
+
+      - name: Run AI RCA and Output to Summary
+        if: env.REPORT_EXISTS == 'true' && failure()
+        run: |
+          echo "## 🤖 AI Root Cause Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "Analyzing test failures using Ollama..." >> $GITHUB_STEP_SUMMARY
+          echo '```markdown' >> $GITHUB_STEP_SUMMARY
+          
+          # Run the Python RCA container, point it to the local Ollama via host network
+          docker run --rm \
+            --network host \
+            -v ${{ github.workspace }}/test-results/playwright-results.json:/app/report.json \
+            smart-rca \
+            -r /app/report.json \
+            -m llama3.2 \
+            -u http://localhost:11434 >> rca_output.txt
+          
+          # Append the output to the GitHub Step Summary
+          cat rca_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+    # --- AI RCA Integration Steps End Here ---

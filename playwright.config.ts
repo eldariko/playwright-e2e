@@ -30,8 +30,16 @@ const config: PlaywrightTestConfig = {
     retries: process.env.CI ? 2 : 0,
     /* Run tests sequentially with 1 worker */
     workers: 1,
-    /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-    reporter: 'html',
+    /* * Reporter to use. See https://playwright.dev/docs/test-reporters
+  * We configure an array of reporters here.
+  * 1. HTML reporter for human readability (default behavior).
+  * 2. JSON reporter for the AI RCA script to easily parse test results and failures.
+  */
+    reporter: [
+        ['html'],
+        ['json', { outputFile: 'test-results/playwright-results.json' }],
+    ],
+
     /* Folder for test artifacts such as screenshots, videos, traces, etc. */
 
     outputDir: 'test-results',
@@ -71,10 +79,10 @@ const config: PlaywrightTestConfig = {
         // },
 
         {
-          name: 'webkit',
-          use: {
-            ...devices['Desktop Safari'],
-          },
+            name: 'webkit',
+            use: {
+                ...devices['Desktop Safari'],
+            },
         },
 
         /* Test against mobile viewports. */
