@@ -38,7 +38,7 @@ test.describe('WordPress API Tests', () => {
 
     test('GET /posts should support pagination', async ({ request }) => {
       const perPage = 3;
-      const response = await request.get(`${BASE_URL}/${API_VERSION}/posts`, {
+      const response = await request.get(`${BASE_URL}/${API_VERSION}/postssss`, {
         params: {
           per_page: perPage,
           _fields: 'id'
