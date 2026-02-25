@@ -62,7 +62,7 @@ jobs:
         with:
           path: ${{ github.workspace }}/.ollama
           key: ollama-model-llama3.2-${{ runner.os }}
-
+          save-always: true
       - name: Start Official Ollama Container & Pull Model
         if: env.REPORT_EXISTS == 'true' && failure()
         run: |
