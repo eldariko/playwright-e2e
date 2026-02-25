@@ -13,7 +13,8 @@ test.describe('WordPress API Tests', () => {
       
       expect(body.namespace).toBe(API_VERSION);
       expect(body.routes).toBeInstanceOf(Object);
-      expect(Object.values(body.routes as Record<string, { namespace?: string }>).some((route) => route.namespace === API_VERSION)).toBeTruthy();
+      expect(Object.values(body.routes as Record<string, { namespace?: string }>).some((route) => route.namespace ===
+          API_VERSION)).toBeTruthy();
     });
   });
 
@@ -38,7 +39,7 @@ test.describe('WordPress API Tests', () => {
 
     test('GET /posts should support pagination', async ({ request }) => {
       const perPage = 3;
-      const response = await request.get(`${BASE_URL}/${API_VERSION}/postssss`, {
+      const response = await request.get(`${BASE_URL}/${API_VERSION}/posts`, {
         params: {
           per_page: perPage,
           _fields: 'id'
