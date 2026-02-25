@@ -55,14 +55,14 @@ jobs:
             echo "REPORT_EXISTS=false" >> $GITHUB_ENV
           fi
 
-      # Cache the downloaded Ollama models to save time on future runs
-      - name: Cache Ollama Models
+      # Explicitly RESTORE the Ollama cache if it exists (Fix for save-always deprecation)
+      - name: Restore Ollama Models Cache
         if: env.REPORT_EXISTS == 'true' && failure()
-        uses: actions/cache@v4
+        id: cache-ollama-restore
+        uses: actions/cache/restore@v4
         with:
           path: ${{ github.workspace }}/.ollama
           key: ollama-model-llama3.2-${{ runner.os }}
-          save-always: true
       - name: Start Official Ollama Container & Pull Model
         if: env.REPORT_EXISTS == 'true' && failure()
         run: |
@@ -77,7 +77,13 @@ jobs:
           
           # Pull the lightweight model inside the running container
           docker exec ollama ollama pull llama3.2
-
+      # Explicitly SAVE the Ollama cache for future runs (only if it wasn't restored earlier)
+      - name: Save Ollama Models Cache
+        if: env.REPORT_EXISTS == 'true' && failure() && steps.cache-ollama-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ github.workspace }}/.ollama
+          key: ollama-model-llama3.2-${{ runner.os }}
       - name: Build Docker Image for RCA
         if: env.REPORT_EXISTS == 'true' && failure()
         run: docker build -t smart-rca .
